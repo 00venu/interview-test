@@ -4,6 +4,7 @@ import { Column } from "@ant-design/charts";
 import "./App.css";
 import "antd/dist/antd.css";
 import { records } from "./data";
+import moment from "moment";
 
 const { Option } = Select;
 function App() {
@@ -52,6 +53,22 @@ function App() {
   const getStandardValues = (value) => {
     return records.map((item) => item[value]);
   };
+  const getDateValues = (date, days) => {
+    let dateFrom = moment().subtract(days, "d").format("DD/MM/YYYY");
+    let dateTo = moment().format("DD/MM/YYYY");
+    let dateCheck = moment(date * 1000).format("DD/MM/YYYY");
+
+    var d1 = dateFrom.split("/");
+    var d2 = dateTo.split("/");
+    var c = dateCheck.split("/");
+
+    var from = new Date(d1[2], parseInt(d1[1]) - 1, d1[0]);
+    var to = new Date(d2[2], parseInt(d2[1]) - 1, d2[0]);
+    var check = new Date(c[2], parseInt(c[1]) - 1, c[0]);
+
+    return check > from && check < to;
+  };
+
   const status = [...new Set(getStandardValues("status"))];
   const type = [...new Set(getStandardValues("issue_type"))];
   const priority = [...new Set(getStandardValues("priority"))];
@@ -69,6 +86,13 @@ function App() {
         }
         if (filterItem && filterValues.priority) {
           filterItem = item.priority === filterValues.priority;
+        }
+        if (filterItem && filterValues.date) {
+          // the available days range are 134 days to 142 days between
+          filterItem = getDateValues(
+            item.issue_created_at,
+            parseInt(filterValues.date)
+          );
         }
         return filterItem;
       });
@@ -89,7 +113,6 @@ function App() {
   } else {
     dataLoading = <div className="no-data">NO DATA IN FILTER CRITERIA.</div>;
   }
-
   return (
     <div className="App">
       <Form layout="inline" onFinish={onFinish}>
@@ -122,6 +145,15 @@ function App() {
                 {item}
               </Option>
             ))}
+          </Select>
+        </Form.Item>
+        <Form.Item name="date">
+          <Select className="select-style" defaultValue="SELECT" name="date">
+            <Option value="134">Last 134 DAYS</Option>
+            <Option value="136">Last 136 DAYS</Option>
+            <Option value="140">Last 140 DAYS</Option>
+            <Option value="180">Last 180 DAYS</Option>
+            <Option value="360">LAST 365 DAYS</Option>
           </Select>
         </Form.Item>
         <Form.Item>
